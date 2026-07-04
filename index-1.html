@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F5257">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OrthoLog">
+<title>OrthoLog — Orthopedic Oncology Records</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230F5257'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Georgia'%3EO%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#0F5257;        /* scrub teal — primary */
+  --ink-deep:#0A3A3E;
+  --paper:#FAFAF8;      /* warm paper */
+  --card:#FFFFFF;
+  --text:#1F2933;
+  --muted:#5C6670;
+  --line:#E4E4DE;
+  --amber:#B45309;      /* pending / attention */
+  --amber-bg:#FEF3E2;
+  --green:#15803D;      /* ready / complete */
+  --green-bg:#EAF6EE;
+  --red:#B91C1C;
+  --red-bg:#FDECEC;
+  --blue:#1D4ED8;
+  --blue-bg:#EAF0FE;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+  background:var(--paper);color:var(--text);
+  min-height:100vh;line-height:1.45;
+}
+#app{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+/* ---------- top bar ---------- */
+#topbar{
+  position:sticky;top:0;z-index:50;
+  background:var(--ink);color:#fff;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 12px;
+  display:flex;align-items:center;gap:10px;
+}
+#topbar .back{
+  background:none;border:none;color:#fff;font-size:26px;line-height:1;
+  padding:4px 8px 4px 0;cursor:pointer;display:none;
+}
+#topbar .back.show{display:block}
+#topbar h1{font-size:18px;font-weight:700;letter-spacing:.2px;flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbar .sub{font-size:11px;opacity:.75;font-weight:400;display:block;letter-spacing:.4px}
+/* ---------- layout ---------- */
+main{padding:16px 16px 8px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;margin-bottom:12px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--ink);margin-bottom:6px}
+.section-h{font-size:16px;font-weight:700;margin:22px 0 10px;display:flex;
+  align-items:baseline;justify-content:space-between}
+.section-h .count{font-size:13px;color:var(--muted);font-weight:500}
+.muted{color:var(--muted);font-size:13px}
+.small{font-size:13px}
+.empty{color:var(--muted);font-size:14px;padding:18px 4px;text-align:center}
+/* ---------- stats strip ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:10px 6px;text-align:center}
+.stat b{display:block;font-size:24px;font-weight:800;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.stat span{font-size:10.5px;color:var(--muted);letter-spacing:.3px}
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;padding:10px 18px;border-radius:12px;border:none;
+  font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;
+  background:var(--ink);color:#fff;width:100%}
+.btn:active{transform:scale(.985)}
+.btn.ghost{background:var(--card);color:var(--ink);border:1.5px solid var(--ink)}
+.btn.danger{background:var(--red-bg);color:var(--red);border:1.5px solid var(--red)}
+.btn.subtle{background:#F1F1EC;color:var(--text);border:1px solid var(--line)}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+.btn-row .btn{flex:1}
+.mini{min-height:34px;padding:5px 12px;font-size:13px;border-radius:9px;width:auto}
+.linkbtn{background:none;border:none;color:var(--red);font-size:13px;font-weight:600;
+  padding:6px 4px;cursor:pointer;font-family:inherit}
+/* ---------- forms ---------- */
+label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);
+  margin:12px 0 4px;letter-spacing:.2px}
+input,textarea,select{
+  width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;
+  font-size:16px;font-family:inherit;background:#fff;color:var(--text)}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--ink)}
+textarea{min-height:76px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+details.adder{margin-bottom:12px}
+details.adder>summary{
+  list-style:none;cursor:pointer;user-select:none;
+  background:var(--card);border:1.5px dashed var(--ink);color:var(--ink);
+  border-radius:12px;padding:11px 16px;font-size:15px;font-weight:600;text-align:center}
+details.adder>summary::-webkit-details-marker{display:none}
+details.adder[open]>summary{border-style:solid;border-radius:12px 12px 0 0;background:var(--ink);color:#fff}
+details.adder .body{background:var(--card);border:1.5px solid var(--ink);border-top:none;
+  border-radius:0 0 12px 12px;padding:4px 16px 16px}
+/* ---------- list rows ---------- */
+.row{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px;margin-bottom:10px}
+.row .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.row .name{font-size:16px;font-weight:700}
+.row .when{font-size:12.5px;color:var(--muted);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.row .body-text{font-size:14px;margin-top:4px;white-space:pre-wrap;word-break:break-word}
+.row .foot{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap;align-items:center}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;
+  border-radius:99px;letter-spacing:.3px}
+.tag.amber{background:var(--amber-bg);color:var(--amber)}
+.tag.green{background:var(--green-bg);color:var(--green)}
+.tag.blue{background:var(--blue-bg);color:var(--blue)}
+.tag.gray{background:#EEEEE9;color:var(--muted)}
+.tag.red{background:var(--red-bg);color:var(--red)}
+/* ---------- readiness dots ---------- */
+.ready-strip{display:flex;gap:14px;margin-top:10px}
+.rdot{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;
+  border:none;cursor:pointer;font-family:inherit;padding:2px 4px}
+.rdot .c{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);
+  background:#fff;transition:all .15s}
+.rdot.on .c{border-color:var(--green);background:var(--green)}
+.rdot span{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px}
+.rdot.on span{color:var(--green)}
+.row.all-ready{border-left:4px solid var(--green)}
+/* ---------- care pathway (signature) ---------- */
+.pw{padding:6px 2px 2px}
+.pw-row{display:flex;gap:12px;position:relative;padding-bottom:16px}
+.pw-row:last-child{padding-bottom:2px}
+.pw-row::before{content:'';position:absolute;left:11px;top:26px;bottom:-2px;width:2px;background:var(--line)}
+.pw-row:last-child::before{display:none}
+.pw-row.done::before{background:var(--ink)}
+.pw-dot{width:24px;height:24px;border-radius:50%;border:2.5px solid var(--line);
+  background:#fff;flex:none;cursor:pointer;padding:0;position:relative;z-index:1;margin-top:1px}
+.pw-row.done .pw-dot{background:var(--ink);border-color:var(--ink)}
+.pw-row.na .pw-dot{border-style:dashed;background:#F1F1EC}
+.pw-row.current .pw-dot{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-bg)}
+.pw-main{flex:1;min-width:0}
+.pw-name{font-size:14.5px;font-weight:600;padding-top:3px}
+.pw-row.done .pw-name{color:var(--ink)}
+.pw-row.na .pw-name{color:var(--muted);text-decoration:line-through}
+.pw-row.current .pw-name{color:var(--amber)}
+.pw-extra{display:flex;gap:8px;align-items:center;margin-top:5px;flex-wrap:wrap}
+input.pw-date{width:auto;font-size:13.5px;padding:5px 9px;border-radius:8px}
+.pw-na{min-height:28px;padding:3px 10px;font-size:12px;border-radius:8px;width:auto;
+  background:#F1F1EC;color:var(--muted);border:1px solid var(--line);cursor:pointer;
+  font-family:inherit;font-weight:600}
+/* ---------- attachments ---------- */
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.thumb-w{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);
+  aspect-ratio:1;background:#EFEFEA;cursor:pointer}
+.thumb-w img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb-doc{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;font-size:28px;color:var(--muted);gap:4px}
+.thumb-doc i{font-style:normal}
+.thumb-doc span{font-size:10px;font-weight:600;padding:0 6px;text-align:center;
+  overflow:hidden;max-width:100%;white-space:nowrap;text-overflow:ellipsis}
+.ttag{position:absolute;left:4px;bottom:4px;background:rgba(15,82,87,.92);color:#fff;
+  font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:6px;letter-spacing:.4px}
+/* ---------- full-screen viewer ---------- */
+#viewer{position:fixed;inset:0;z-index:150;background:rgba(10,20,22,.95);display:none;
+  flex-direction:column;align-items:center;justify-content:center;padding:16px}
+#viewer.show{display:flex}
+#viewerImg{max-width:100%;max-height:70vh;border-radius:10px;background:#000;object-fit:contain}
+#viewerMeta{color:#fff;font-size:13.5px;margin-top:12px;text-align:center;max-width:520px;
+  white-space:pre-wrap}
+#viewer .btn-row{width:100%;max-width:320px}
+/* ---------- patient card ---------- */
+.pcard{display:block;width:100%;text-align:left;background:var(--card);
+  border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:10px;
+  cursor:pointer;font-family:inherit}
+.pcard:active{background:#F4F4EF}
+.pcard .nm{font-size:16.5px;font-weight:700;color:var(--text)}
+.pcard .meta{font-size:13px;color:var(--muted);margin-top:2px}
+.pcard .dx{font-size:13.5px;margin-top:4px;color:var(--text)}
+.pcard .tag{margin-top:7px}
+/* ---------- banner ---------- */
+.banner{border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13.5px;
+  display:flex;gap:10px;align-items:flex-start}
+.banner.amber{background:var(--amber-bg);color:var(--amber);border:1px solid #F0D9B8}
+.banner.red{background:var(--red-bg);color:var(--red);border:1px solid #F2C7C7}
+.banner b{font-weight:700}
+/* ---------- bottom nav ---------- */
+#nav{position:fixed;bottom:0;left:0;right:0;z-index:60;
+  background:var(--card);border-top:1px solid var(--line);
+  display:flex;padding-bottom:env(safe-area-inset-bottom)}
+#nav button{flex:1;background:none;border:none;padding:11px 2px 9px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:600;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;gap:3px}
+#nav button .pip{width:5px;height:5px;border-radius:50%;background:transparent}
+#nav button.active{color:var(--ink)}
+#nav button.active .pip{background:var(--ink)}
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(86px + env(safe-area-inset-bottom));z-index:170;
+  background:var(--ink-deep);color:#fff;font-size:14px;font-weight:600;
+  padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;
+  transition:opacity .25s;max-width:88%;text-align:center}
+#toast.show{opacity:1}
+/* ---------- lock ---------- */
+#lock{position:fixed;inset:0;z-index:200;background:var(--ink);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;color:#fff}
+#lock.show{display:flex}
+#lock h2{font-size:22px;margin-bottom:4px}
+#lock p{font-size:13px;opacity:.75;margin-bottom:20px}
+#lock input{max-width:220px;text-align:center;font-size:22px;letter-spacing:8px;
+  border-radius:12px;border:none;margin-bottom:12px}
+#lock .btn{max-width:220px;background:#fff;color:var(--ink)}
+#lock .forgot{background:none;border:none;color:#fff;opacity:.6;font-size:12.5px;
+  margin-top:18px;text-decoration:underline;cursor:pointer;font-family:inherit}
+hr.sep{border:none;border-top:1px solid var(--line);margin:18px 0}
+.chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{min-height:32px;padding:4px 12px;font-size:13px;border-radius:99px;width:auto;
+  background:#F1F1EC;color:var(--text);border:1px solid var(--line);cursor:pointer;
+  font-family:inherit;font-weight:600}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="lock">
+  <h2>OrthoLog</h2>
+  <p>Enter your PIN to open records</p>
+  <input id="lockPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off">
+  <button class="btn" onclick="unlock()">Unlock</button>
+  <button class="forgot" onclick="forgotPin()">Forgot PIN?</button>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <button class="back" id="backBtn" onclick="goBack()">‹</button>
+    <h1 id="title">OrthoLog<span class="sub">Orthopedic oncology records · v2 · on-device</span></h1>
+  </div>
+  <main id="view"></main>
+  <nav id="nav">
+    <button data-v="home" onclick="nav('home')"><span class="pip"></span>Today</button>
+    <button data-v="patients" onclick="nav('patients')"><span class="pip"></span>Patients</button>
+    <button data-v="schedule" onclick="nav('schedule')"><span class="pip"></span>Schedule</button>
+    <button data-v="data" onclick="nav('data')"><span class="pip"></span>Backup</button>
+  </nav>
+</div>
+
+<div id="viewer">
+  <img id="viewerImg" alt="">
+  <div id="viewerMeta"></div>
+  <div class="btn-row">
+    <button class="btn danger" id="viewerDel">Delete</button>
+    <button class="btn subtle" onclick="closeViewer()">Close</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+
+<script>
+/* ================= storage (with safe fallback for previews) ================= */
+var MEMORY_ONLY = false;
+var store = (function(){
+  try{
+    var t='__t'; localStorage.setItem(t,'1'); localStorage.removeItem(t);
+    return localStorage;
+  }catch(e){
+    MEMORY_ONLY = true;
+    var m={};
+    return {getItem:function(k){return (k in m)?m[k]:null},
+            setItem:function(k,v){m[k]=String(v)},
+            removeItem:function(k){delete m[k]}};
+  }
+})();
+
+var KEY='orthoEMR_v1';
+function seed(){return {patients:[],encounters:[],imaging:[],biopsies:[],treatments:[],
+  surgeries:[],implants:[],appointments:[],followups:[],attachments:[],
+  pin:null,lastBackup:null};}
+function load(){
+  try{
+    var raw=store.getItem(KEY);
+    if(!raw) return seed();
+    var d=JSON.parse(raw);
+    var s=seed();
+    for(var k in s){ if(d[k]===undefined) d[k]=s[k]; }
+    return d;
+  }catch(e){ return seed(); }
+}
+var db=load();
+function save(){ store.setItem(KEY, JSON.stringify(db)); }
+
+/* ================= image store: IndexedDB with in-memory fallback ================= */
+var IDB_OK = (typeof indexedDB !== 'undefined');
+var _idb = null;
+var _memImgs = {};
+function idbOpen(){
+  return new Promise(function(res){
+    if(!IDB_OK){ res(null); return; }
+    if(_idb){ res(_idb); return; }
+    try{
+      var rq = indexedDB.open('orthoEMR_files', 1);
+      rq.onupgradeneeded = function(e){ e.target.result.createObjectStore('imgs'); };
+      rq.onsuccess = function(e){ _idb = e.target.result; res(_idb); };
+      rq.onerror = function(){ IDB_OK=false; res(null); };
+    }catch(e){ IDB_OK=false; res(null); }
+  });
+}
+function imgPut(id, blob){
+  return idbOpen().then(function(d){
+    if(!d){ _memImgs[id]=blob; return; }
+    return new Promise(function(res,rej){
+      var tx=d.transaction('imgs','readwrite');
+      tx.objectStore('imgs').put(blob,id);
+      tx.oncomplete=function(){res();};
+      tx.onerror=function(){rej(tx.error);};
+    });
+  });
+}
+function imgGet(id){
+  return idbOpen().then(function(d){
+    if(!d){ return _memImgs[id]; }
+    return new Promise(function(res){
+      var rq=d.transaction('imgs').objectStore('imgs').get(id);
+      rq.onsuccess=function(){res(rq.result);};
+      rq.onerror=function(){res(undefined);};
+    });
+  });
+}
+function imgDel(id){
+  return idbOpen().then(function(d){
+    if(!d){ delete _memImgs[id]; return; }
+    return new Promise(function(res){
+      var tx=d.transaction('imgs','readwrite');
+      tx.objectStore('imgs').delete(id);
+      tx.oncomplete=function(){res();};
+      tx.onerror=function(){res();};
+    });
+  });
+}
+function imgClearAll(){
+  return idbOpen().then(function(d){
+    _memImgs={};
+    if(!d) return;
+    return new Promise(function(res){
+      var tx=d.transaction('imgs','readwrite');
+      tx.objectStore('imgs').clear();
+      tx.oncomplete=function(){res();};
+      tx.onerror=function(){res();};
+    });
+  });
+}
+/* compress photos before storing (max 1600px, JPEG ~72%) */
+function compressImage(file){
+  return new Promise(function(res){
+    if(!/^image\//.test(file.type||'')){ res(file); return; }
+    try{
+      var img=new Image();
+      var url=URL.createObjectURL(file);
+      img.onload=function(){
+        var MAX=1600, w=img.width, h=img.height;
+        if(Math.max(w,h)>MAX){ var r=MAX/Math.max(w,h); w=Math.round(w*r); h=Math.round(h*r); }
+        var c=document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        URL.revokeObjectURL(url);
+        if(c.toBlob){ c.toBlob(function(b){ res(b||file); },'image/jpeg',0.72); }
+        else res(file);
+      };
+      img.onerror=function(){ URL.revokeObjectURL(url); res(file); };
+      img.src=url;
+    }catch(e){ res(file); }
+  });
+}
+
+/* ================= helpers ================= */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function localYMD(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function todayStr(){ return localYMD(new Date()); }
+function fmtD(s){ if(!s) return '—';
+  var d=new Date(s.length===10 ? s+'T00:00' : s);
+  return isNaN(d)?'—':d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDT(s){ if(!s) return '—';
+  var d=new Date(s);
+  return isNaN(d)?'—':d.toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});}
+function pName(id){ var p=db.patients.find(function(x){return x.id===id;});
+  return p?p.name:'(deleted patient)';}
+function val(id){ var el=document.getElementById(id); return el?el.value.trim():''; }
+function toast(msg){ var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(function(){t.classList.remove('show');},1900);}
+function daysAgo(ts){ return Math.floor((Date.now()-ts)/86400000); }
+
+/* ================= care pathway ================= */
+var PATHWAY=[
+  {k:'consult',      n:'First consultation'},
+  {k:'imaging',      n:'Imaging'},
+  {k:'bx_plan',      n:'Biopsy planning'},
+  {k:'biopsy',       n:'Surgical biopsy'},
+  {k:'histo',        n:'Histopathology report'},
+  {k:'neo_chemo',    n:'Pre-op chemotherapy', opt:true},
+  {k:'surg_plan',    n:'Surgical planning & posting'},
+  {k:'surgery',      n:'Definitive surgery'},
+  {k:'postop_notes', n:'Post-op notes'},
+  {k:'postop_visit', n:'Post-op visit'},
+  {k:'sutures',      n:'Suture removal'},
+  {k:'adj_chemo',    n:'Post-op chemotherapy', opt:true},
+  {k:'followup',     n:'Regular follow-up'}
+];
+function pwState(p){ return p.pathway || {}; }
+function currentStage(p){
+  var s=pwState(p);
+  for(var i=0;i<PATHWAY.length;i++){
+    var st=s[PATHWAY[i].k];
+    if(!(st && (st.done || st.na))) return PATHWAY[i];
+  }
+  return null; /* all complete */
+}
+function pwToggle(pid,k){
+  var p=db.patients.find(function(x){return x.id===pid;}); if(!p) return;
+  p.pathway=p.pathway||{};
+  var st=p.pathway[k]||{};
+  if(st.done || st.na){ p.pathway[k]={}; }
+  else{ p.pathway[k]={done:true,date:todayStr()}; }
+  save(); render();
+}
+function pwNA(pid,k){
+  var p=db.patients.find(function(x){return x.id===pid;}); if(!p) return;
+  p.pathway=p.pathway||{};
+  var st=p.pathway[k]||{};
+  p.pathway[k]= st.na ? {} : {na:true};
+  save(); render();
+}
+function pwDate(pid,k,v){
+  var p=db.patients.find(function(x){return x.id===pid;}); if(!p) return;
+  p.pathway=p.pathway||{};
+  p.pathway[k]=p.pathway[k]||{done:true};
+  p.pathway[k].date=v; save();
+}
+function pathwayHTML(p){
+  var s=pwState(p);
+  var cur=currentStage(p);
+  var doneCount=PATHWAY.filter(function(st){var x=s[st.k];return x&&(x.done||x.na);}).length;
+  var h='<details class="adder"><summary>Care pathway · '+
+    (cur?esc(cur.n):'Complete — on follow-up')+' ('+doneCount+'/'+PATHWAY.length+')</summary>'+
+    '<div class="body"><div class="pw">';
+  PATHWAY.forEach(function(st){
+    var x=s[st.k]||{};
+    var cls = x.done?'done':(x.na?'na':(cur&&cur.k===st.k?'current':''));
+    h+='<div class="pw-row '+cls+'">'+
+      '<button class="pw-dot" onclick="pwToggle(\''+p.id+'\',\''+st.k+'\')"></button>'+
+      '<div class="pw-main"><div class="pw-name">'+esc(st.n)+'</div>';
+    if(x.done){
+      h+='<div class="pw-extra"><input class="pw-date" type="date" value="'+esc(x.date||todayStr())+'" '+
+         'onchange="pwDate(\''+p.id+'\',\''+st.k+'\',this.value)"></div>';
+    }else if(st.opt && !x.na){
+      h+='<div class="pw-extra"><button class="pw-na" onclick="pwNA(\''+p.id+'\',\''+st.k+'\')">Not applicable</button></div>';
+    }else if(x.na){
+      h+='<div class="pw-extra"><button class="pw-na" onclick="pwNA(\''+p.id+'\',\''+st.k+'\')">Undo N/A</button></div>';
+    }
+    h+='</div></div>';
+  });
+  h+='<div class="muted small">Tap a circle to mark done (today). Tap again to undo. Correct the date if entering old records.</div>';
+  h+='</div></div></details>';
+  return h;
+}
+
+/* ================= navigation ================= */
+var state={view:'home', pid:null, q:''};
+var LIVE_URLS=[];
+function revokeLive(){ LIVE_URLS.forEach(function(u){ try{URL.revokeObjectURL(u);}catch(e){} }); LIVE_URLS=[]; }
+function nav(v,pid){ state.view=v; state.pid=pid||null; if(v!=='patients') state.q='';
+  render(); window.scrollTo(0,0); }
+function goBack(){ nav('patients'); }
+function openPatient(id){ nav('patient', id); }
+
+function render(){
+  var tabs=document.querySelectorAll('#nav button');
+  tabs.forEach(function(b){
+    var v=b.getAttribute('data-v');
+    b.classList.toggle('active', v===state.view || (state.view==='patient'&&v==='patients'));
+  });
+  var back=document.getElementById('backBtn');
+  var title=document.getElementById('title');
+  if(state.view==='patient'){
+    back.classList.add('show');
+    var p=db.patients.find(function(x){return x.id===state.pid;});
+    title.innerHTML=esc(p?p.name:'Patient');
+  }else{
+    back.classList.remove('show');
+    title.innerHTML='OrthoLog<span class="sub">Orthopedic oncology records · v2 · on-device</span>';
+  }
+  var el=document.getElementById('view');
+  if(state.view==='home') el.innerHTML=viewHome();
+  else if(state.view==='patients') el.innerHTML=viewPatients();
+  else if(state.view==='patient') el.innerHTML=viewPatient(state.pid);
+  else if(state.view==='schedule') el.innerHTML=viewSchedule();
+  else if(state.view==='data') el.innerHTML=viewData();
+  hydrateThumbs();
+  if(state.view==='data') fillStorageEstimate();
+}
+function hydrateThumbs(){
+  revokeLive();
+  var imgs=document.querySelectorAll('img[data-att]');
+  imgs.forEach(function(im){
+    var id=im.getAttribute('data-att');
+    imgGet(id).then(function(b){
+      if(b){ var u=URL.createObjectURL(b); LIVE_URLS.push(u); im.src=u; }
+    });
+  });
+}
+
+/* ================= HOME ================= */
+function viewHome(){
+  var today=todayStr();
+  var upcoming=db.appointments.filter(function(a){return a.status==='Scheduled';});
+  var todays=upcoming.filter(function(a){return (a.dt||'').slice(0,10)===today;})
+    .sort(function(a,b){return a.dt<b.dt?-1:1;});
+  var pendImg=db.imaging.filter(function(i){return i.status==='Pending';});
+  var due=db.followups.filter(function(f){
+    if(!f.next_date) return false;
+    var lim=new Date(); lim.setDate(lim.getDate()+7);
+    return new Date(f.next_date+'T00:00')<=lim;
+  }).sort(function(a,b){return a.next_date<b.next_date?-1:1;});
+
+  var h='';
+  if(MEMORY_ONLY){
+    h+='<div class="banner red"><div><b>Preview mode — nothing will be saved.</b> You are viewing this inside an app preview. Open your deployed link in Chrome or Safari to save data on your phone.</div></div>';
+  }
+  if(!MEMORY_ONLY && db.patients.length>0 && (!db.lastBackup || daysAgo(db.lastBackup)>=7)){
+    h+='<div class="banner amber"><div><b>Backup reminder.</b> '+
+      (db.lastBackup?('Last backup was '+daysAgo(db.lastBackup)+' days ago.'):'You have never exported a backup.')+
+      ' Records live only in this browser — export a copy.</div></div>';
+  }
+
+  h+='<div class="stats">'+
+    '<div class="stat"><b>'+db.patients.length+'</b><span>Patients</span></div>'+
+    '<div class="stat"><b>'+upcoming.length+'</b><span>Upcoming</span></div>'+
+    '<div class="stat"><b>'+pendImg.length+'</b><span>Imaging pend.</span></div>'+
+    '<div class="stat"><b>'+due.length+'</b><span>F/U due</span></div>'+
+  '</div>';
+
+  h+='<div class="section-h">Today\u2019s appointments <span class="count">'+fmtD(today)+'</span></div>';
+  if(todays.length===0) h+='<div class="empty">No appointments today.</div>';
+  todays.forEach(function(a){ h+=apptRow(a,true); });
+
+  h+='<div class="section-h">Follow-ups due <span class="count">next 7 days</span></div>';
+  if(due.length===0) h+='<div class="empty">Nothing due this week.</div>';
+  due.slice(0,6).forEach(function(f){
+    var overdue = f.next_date < today;
+    h+='<div class="row"><div class="top"><span class="name">'+esc(pName(f.patient_id))+'</span>'+
+       '<span class="when">'+fmtD(f.next_date)+'</span></div>'+
+       '<div class="foot"><span class="tag '+(overdue?'red':'amber')+'">'+(overdue?'Overdue':'Due soon')+'</span>'+
+       '<span class="muted">'+esc(f.type||'Follow-up')+'</span>'+
+       '<button class="btn subtle mini" onclick="openPatient(\''+f.patient_id+'\')">Open</button></div></div>';
+  });
+
+  h+='<hr class="sep"><div class="btn-row">'+
+     '<button class="btn" onclick="nav(\'patients\')">+ Add patient</button>'+
+     '<button class="btn ghost" onclick="nav(\'schedule\')">+ Appointment</button></div>';
+  return h;
+}
+
+/* ================= PATIENTS LIST ================= */
+function patientForm(prefix,p){
+  p=p||{};
+  return '<div class="grid2">'+
+    '<div><label>Name *</label><input id="'+prefix+'_name" value="'+esc(p.name||'')+'"></div>'+
+    '<div><label>Age</label><input id="'+prefix+'_age" type="number" inputmode="numeric" value="'+esc(p.age||'')+'"></div></div>'+
+    '<div class="grid2"><div><label>Sex</label><select id="'+prefix+'_sex">'+
+      ['Male','Female','Other'].map(function(g){return '<option'+(p.sex===g?' selected':'')+'>'+g+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Phone</label><input id="'+prefix+'_phone" type="tel" inputmode="tel" value="'+esc(p.phone||'')+'"></div></div>'+
+    '<label>Referring doctor</label><input id="'+prefix+'_ref" value="'+esc(p.ref||'')+'">'+
+    '<label>Diagnosis / chief complaint</label><textarea id="'+prefix+'_dx">'+esc(p.dx||'')+'</textarea>'+
+    '<label>Relevant history &amp; comorbidities</label><textarea id="'+prefix+'_hx">'+esc(p.hx||'')+'</textarea>'+
+    '<label>Allergies</label><input id="'+prefix+'_all" value="'+esc(p.all||'')+'">'+
+    '<label>Special remarks</label><textarea id="'+prefix+'_rem">'+esc(p.remarks||'')+'</textarea>';
+}
+function viewPatients(){
+  var q=state.q.toLowerCase();
+  var list=db.patients.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+    .filter(function(p){ if(!q) return true;
+      return (p.name+' '+(p.phone||'')+' '+(p.dx||'')).toLowerCase().indexOf(q)>=0;});
+  var h='<input placeholder="Search name, phone or diagnosis" value="'+esc(state.q)+'" '+
+    'oninput="state.q=this.value;renderListOnly()" style="margin-bottom:12px">';
+  h+='<details class="adder"><summary>+ New patient</summary><div class="body">'+
+     patientForm('np')+
+     '<button class="btn" style="margin-top:14px" onclick="addPatient()">Save patient</button>'+
+     '</div></details>';
+  h+='<div id="plist">'+patientListHTML(list)+'</div>';
+  return h;
+}
+function patientListHTML(list){
+  if(db.patients.length===0) return '<div class="empty">No patients yet. Add your first one above.</div>';
+  if(list.length===0) return '<div class="empty">No match for that search.</div>';
+  return list.map(function(p){
+    var cur=currentStage(p);
+    return '<button class="pcard" onclick="openPatient(\''+p.id+'\')">'+
+      '<div class="nm">'+esc(p.name)+'</div>'+
+      '<div class="meta">'+esc(p.age?p.age+' yrs':'')+(p.age&&p.sex?' · ':'')+esc(p.sex||'')+
+      (p.phone?' · '+esc(p.phone):'')+'</div>'+
+      (p.dx?'<div class="dx">'+esc(p.dx)+'</div>':'')+
+      '<span class="tag '+(cur?'amber':'green')+'">'+(cur?'Next: '+esc(cur.n):'Pathway complete')+'</span>'+
+    '</button>';}).join('');
+}
+function renderListOnly(){
+  var q=state.q.toLowerCase();
+  var list=db.patients.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+    .filter(function(p){ if(!q) return true;
+      return (p.name+' '+(p.phone||'')+' '+(p.dx||'')).toLowerCase().indexOf(q)>=0;});
+  var el=document.getElementById('plist');
+  if(el) el.innerHTML=patientListHTML(list);
+}
+function addPatient(){
+  if(!val('np_name')){ toast('Name is required'); return; }
+  db.patients.push({id:uid(),name:val('np_name'),age:val('np_age'),sex:val('np_sex'),
+    phone:val('np_phone'),ref:val('np_ref'),dx:val('np_dx'),hx:val('np_hx'),
+    all:val('np_all'),remarks:val('np_rem'),created:todayStr(),pathway:{}});
+  save(); toast('Patient saved'); render();
+}
+function updatePatient(pid){
+  var p=db.patients.find(function(x){return x.id===pid;});
+  if(!p) return;
+  if(!val('ep_name')){ toast('Name is required'); return; }
+  p.name=val('ep_name'); p.age=val('ep_age'); p.sex=val('ep_sex');
+  p.phone=val('ep_phone'); p.ref=val('ep_ref'); p.dx=val('ep_dx');
+  p.hx=val('ep_hx'); p.all=val('ep_all'); p.remarks=val('ep_rem');
+  save(); toast('Patient updated'); render();
+}
+function deletePatient(pid){
+  var p=db.patients.find(function(x){return x.id===pid;});
+  if(!p) return;
+  if(!confirm('Delete '+p.name+' and every linked record (including photos)? This cannot be undone.')) return;
+  db.attachments.filter(function(a){return a.patient_id===pid;})
+    .forEach(function(a){ imgDel(a.id); });
+  db.patients=db.patients.filter(function(x){return x.id!==pid;});
+  ['encounters','imaging','biopsies','treatments','appointments','followups','surgeries','implants','attachments'].forEach(function(k){
+    db[k]=db[k].filter(function(x){return x.patient_id!==pid;});
+  });
+  save(); toast('Patient deleted'); nav('patients');
+}
+
+/* ================= PATIENT DETAIL ================= */
+function recList(items, rowFn, emptyMsg){
+  if(items.length===0) return '<div class="empty">'+emptyMsg+'</div>';
+  return items.map(rowFn).join('');
+}
+function byPatient(coll,pid){
+  return db[coll].filter(function(x){return x.patient_id===pid;})
+    .sort(function(a,b){return (a.date||a.dt||'')<(b.date||b.dt||'')?1:-1;});
+}
+function viewPatient(pid){
+  var p=db.patients.find(function(x){return x.id===pid;});
+  if(!p) return '<div class="empty">Patient not found.</div>';
+  var enc=byPatient('encounters',pid);
+  var img=byPatient('imaging',pid);
+  var bx =byPatient('biopsies',pid);
+  var trt=byPatient('treatments',pid);
+  var surg=byPatient('surgeries',pid);
+  var impl=byPatient('implants',pid);
+  var apt=byPatient('appointments',pid);
+  var fu =byPatient('followups',pid);
+  var att=byPatient('attachments',pid);
+
+  /* ---- summary card ---- */
+  var h='<div class="card">'+
+    '<div class="eyebrow">Patient</div>'+
+    '<div style="font-size:19px;font-weight:800">'+esc(p.name)+'</div>'+
+    '<div class="muted" style="margin-top:2px">'+esc(p.age?p.age+' yrs':'')+
+      (p.age&&p.sex?' · ':'')+esc(p.sex||'')+(p.phone?' · '+esc(p.phone):'')+'</div>'+
+    (p.dx?'<div class="small" style="margin-top:8px"><b>Dx:</b> '+esc(p.dx)+'</div>':'')+
+    (p.hx?'<div class="small" style="margin-top:4px"><b>History:</b> '+esc(p.hx)+'</div>':'')+
+    (p.all?'<div class="small" style="margin-top:4px;color:var(--red)"><b>Allergies:</b> '+esc(p.all)+'</div>':'')+
+    (p.remarks?'<div class="small" style="margin-top:8px;background:var(--amber-bg);color:var(--amber);padding:8px 10px;border-radius:8px"><b>Special remarks:</b> '+esc(p.remarks)+'</div>':'')+
+    (p.ref?'<div class="small muted" style="margin-top:6px">Referred by '+esc(p.ref)+'</div>':'')+
+  '</div>';
+
+  /* ---- care pathway ---- */
+  h+=pathwayHTML(p);
+
+  h+='<details class="adder"><summary>Edit patient details</summary><div class="body">'+
+     patientForm('ep',p)+
+     '<button class="btn" style="margin-top:14px" onclick="updatePatient(\''+p.id+'\')">Save changes</button>'+
+     '</div></details>';
+
+  /* -------- encounters -------- */
+  h+='<div class="section-h">Encounters <span class="count">'+enc.length+'</span></div>';
+  h+='<details class="adder"><summary>+ New encounter</summary><div class="body">'+
+    '<div class="grid2"><div><label>Date</label><input id="en_date" type="date" value="'+todayStr()+'"></div>'+
+    '<div><label>Type</label><select id="en_type">'+
+      ['First consultation','OPD consult','Follow-up','Pre-op','Post-op visit','Emergency','MDT discussion'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select></div></div>'+
+    '<label>Complaint / reason</label><textarea id="en_cc"></textarea>'+
+    '<label>Examination findings</label><textarea id="en_exam"></textarea>'+
+    '<label>Assessment</label><textarea id="en_ax"></textarea>'+
+    '<label>Plan</label><textarea id="en_plan"></textarea>'+
+    '<button class="btn" style="margin-top:14px" onclick="addEncounter(\''+pid+'\')">Save encounter</button>'+
+    '</div></details>';
+  h+=recList(enc,function(e){
+    return '<div class="row"><div class="top"><span class="name">'+esc(e.type)+'</span>'+
+      '<span class="when">'+fmtD(e.date)+'</span></div>'+
+      (e.cc?'<div class="body-text"><b>C/o:</b> '+esc(e.cc)+'</div>':'')+
+      (e.exam?'<div class="body-text"><b>O/e:</b> '+esc(e.exam)+'</div>':'')+
+      (e.ax?'<div class="body-text"><b>Ax:</b> '+esc(e.ax)+'</div>':'')+
+      (e.plan?'<div class="body-text"><b>Plan:</b> '+esc(e.plan)+'</div>':'')+
+      '<div class="foot"><button class="linkbtn" onclick="deleteRec(\'encounters\',\''+e.id+'\')">Delete</button></div></div>';
+  },'No encounters recorded.');
+
+  /* -------- imaging -------- */
+  h+='<div class="section-h">Imaging <span class="count">'+img.length+'</span></div>';
+  h+='<details class="adder"><summary>+ New imaging</summary><div class="body">'+
+    '<div class="grid2"><div><label>Date</label><input id="im_date" type="date" value="'+todayStr()+'"></div>'+
+    '<div><label>Study</label><select id="im_mod">'+
+      ['X-ray','MRI','CT','PET-CT','Bone scan','USG','Labs'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select></div></div>'+
+    '<label>Site (e.g. right distal femur)</label><input id="im_site">'+
+    '<label>Findings</label><textarea id="im_find"></textarea>'+
+    '<label>Staging / grade (if applicable)</label><input id="im_stage">'+
+    '<label>Status</label><select id="im_status"><option>Pending</option><option>Complete</option></select>'+
+    '<div class="muted small" style="margin-top:8px">Attach the film / report photo in the Photos &amp; documents section below.</div>'+
+    '<button class="btn" style="margin-top:14px" onclick="addImaging(\''+pid+'\')">Save record</button>'+
+    '</div></details>';
+  h+=recList(img,function(i){
+    return '<div class="row"><div class="top"><span class="name">'+esc(i.mod)+
+      (i.site?' — '+esc(i.site):'')+'</span><span class="when">'+fmtD(i.date)+'</span></div>'+
+      (i.find?'<div class="body-text">'+esc(i.find)+'</div>':'')+
+      (i.stage?'<div class="body-text"><b>Stage:</b> '+esc(i.stage)+'</div>':'')+
+      '<div class="foot"><span class="tag '+(i.status==='Complete'?'green':'amber')+'">'+esc(i.status)+'</span>'+
+      '<button class="btn subtle mini" onclick="toggleImg(\''+i.id+'\')">Mark '+(i.status==='Complete'?'pending':'complete')+'</button>'+
+      '<button class="linkbtn" onclick="deleteRec(\'imaging\',\''+i.id+'\')">Delete</button></div></div>';
+  },'No imaging yet.');
+
+  /* -------- biopsy & histopathology -------- */
+  h+='<div class="section-h">Biopsy &amp; histopathology <span class="count">'+bx.length+'</span></div>';
+  h+='<details class="adder"><summary>+ New biopsy / histopath report</summary><div class="body">'+
+    '<div class="grid2"><div><label>Date</label><input id="bx_date" type="date" value="'+todayStr()+'"></div>'+
+    '<div><label>Record type</label></div></div>'+
+    '<select id="bx_type" style="margin-top:-6px">'+
+      ['Biopsy planning note','Core needle biopsy','Incisional biopsy','Excisional biopsy','FNAC',
+       'Histopathology — biopsy specimen','Histopathology — resection specimen','IHC report'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select>'+
+    '<label>Site / specimen</label><input id="bx_site" placeholder="e.g. rt. distal femur, core x3">'+
+    '<label>Diagnosis / impression</label><textarea id="bx_dx" placeholder="e.g. conventional osteosarcoma, osteoblastic"></textarea>'+
+    '<div class="grid2"><div><label>Grade</label><input id="bx_grade" placeholder="e.g. high grade"></div>'+
+    '<div><label>Margins (resection)</label><input id="bx_margins" placeholder="e.g. all free, closest 8 mm"></div></div>'+
+    '<label>Full report details / necrosis % / IHC</label><textarea id="bx_det"></textarea>'+
+    '<div class="muted small" style="margin-top:8px">Attach a photo of the printed report under Photos &amp; documents → Histopathology report.</div>'+
+    '<button class="btn" style="margin-top:14px" onclick="addBiopsy(\''+pid+'\')">Save report</button>'+
+    '</div></details>';
+  h+=recList(bx,function(b){
+    return '<div class="row"><div class="top"><span class="name">'+esc(b.rtype)+'</span>'+
+      '<span class="when">'+fmtD(b.date)+'</span></div>'+
+      (b.site?'<div class="small"><b>Specimen:</b> '+esc(b.site)+'</div>':'')+
+      (b.dx?'<div class="body-text"><b>Dx:</b> '+esc(b.dx)+'</div>':'')+
+      ((b.grade||b.margins)?'<div class="small">'+(b.grade?'<b>Grade:</b> '+esc(b.grade)+'  ':'')+
+        (b.margins?'<b>Margins:</b> '+esc(b.margins):'')+'</div>':'')+
+      (b.det?'<div class="body-text">'+esc(b.det)+'</div>':'')+
+      '<div class="foot"><button class="linkbtn" onclick="deleteRec(\'biopsies\',\''+b.id+'\')">Delete</button></div></div>';
+  },'No biopsy or histopathology records.');
+
+  /* -------- chemotherapy & treatment -------- */
+  h+='<div class="section-h">Chemo &amp; other treatment <span class="count">'+trt.length+'</span></div>';
+  h+='<details class="adder"><summary>+ New treatment</summary><div class="body">'+
+    '<div class="grid2"><div><label>Date</label><input id="tr_date" type="date" value="'+todayStr()+'"></div>'+
+    '<div><label>Type</label></div></div>'+
+    '<select id="tr_type" style="margin-top:-6px">'+
+      ['Pre-op (neoadjuvant) chemotherapy','Post-op (adjuvant) chemotherapy','Radiotherapy','Palliative care','Other'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select>'+
+    '<label>Regimen / drugs / dose</label><textarea id="tr_det" placeholder="e.g. MAP — HD-MTX, doxorubicin, cisplatin"></textarea>'+
+    '<div class="grid2"><div><label>Cycles (done / planned)</label><input id="tr_cyc" placeholder="e.g. 2 / 6"></div>'+
+    '<div><label>Status</label><select id="tr_status"><option>Planned</option><option>Active</option><option>Completed</option></select></div></div>'+
+    '<button class="btn" style="margin-top:14px" onclick="addTreatment(\''+pid+'\')">Save treatment</button>'+
+    '</div></details>';
+  h+=recList(trt,function(t){
+    var tone = t.status==='Active'?'blue':(t.status==='Completed'?'green':'amber');
+    return '<div class="row"><div class="top"><span class="name">'+esc(t.type)+'</span>'+
+      '<span class="when">'+fmtD(t.date)+'</span></div>'+
+      (t.det?'<div class="body-text">'+esc(t.det)+'</div>':'')+
+      (t.cycles?'<div class="small"><b>Cycles:</b> '+esc(t.cycles)+'</div>':'')+
+      '<div class="foot"><span class="tag '+tone+'">'+esc(t.status)+'</span>'+
+      '<button class="btn subtle mini" onclick="cycleTreatment(\''+t.id+'\')">Next status</button>'+
+      '<button class="linkbtn" onclick="deleteRec(\'treatments\',\''+t.id+'\')">Delete</button></div></div>';
+  },'No chemo or other treatment yet.');
+
+  /* -------- surgeries -------- */
+  h+='<div class="section-h">Surgical procedures <span class="count">'+surg.length+'</span></div>';
+  h+='<details class="adder"><summary>+ New surgery</summary><div class="body">'+
+    '<div class="grid2"><div><label>Date</label><input id="sg_date" type="date" value="'+todayStr()+'"></div>'+
+    '<div><label>Procedure</label></div></div>'+
+    '<select id="sg_type" style="margin-top:-6px">'+
+      ['Surgical biopsy','Wide excision','Limb salvage + reconstruction','Amputation','Resection','Curettage','Revision surgery','Other'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select>'+
+    '<label>Anatomic site (e.g. distal femur)</label><input id="sg_site">'+
+    '<label>Surgical approach</label><input id="sg_approach" placeholder="e.g. medial parapatellar">'+
+    '<label>Intra-op findings / post-op notes</label><textarea id="sg_find"></textarea>'+
+    '<div class="grid2"><div><label>Blood loss (mL)</label><input id="sg_bl" type="number" inputmode="numeric"></div>'+
+    '<div><label>Op. time (min)</label><input id="sg_time" type="number" inputmode="numeric"></div></div>'+
+    '<label>Notes</label><textarea id="sg_notes"></textarea>'+
+    '<button class="btn" style="margin-top:14px" onclick="addSurgery(\''+pid+'\')">Save surgery</button>'+
+    '</div></details>';
+  h+=recList(surg,function(s){
+    return '<div class="row"><div class="top"><span class="name">'+esc(s.type)+'</span>'+
+      '<span class="when">'+fmtD(s.date)+'</span></div>'+
+      (s.site?'<div class="small"><b>Site:</b> '+esc(s.site)+'</div>':'')+
+      (s.approach?'<div class="small"><b>Approach:</b> '+esc(s.approach)+'</div>':'')+
+      (s.findings?'<div class="body-text">'+esc(s.findings)+'</div>':'')+
+      ((s.bloodLoss||s.time)?'<div class="small"><b>EBL:</b> '+esc(s.bloodLoss||'—')+' mL · <b>Time:</b> '+esc(s.time||'—')+' min</div>':'')+
+      (s.notes?'<div class="body-text">'+esc(s.notes)+'</div>':'')+
+      '<div class="foot"><button class="linkbtn" onclick="deleteRec(\'surgeries\',\''+s.id+'\')">Delete</button></div></div>';
+  },'No surgeries recorded.');
+
+  /* -------- implants -------- */
+  h+='<div class="section-h">Implants &amp; prosthetics <span class="count">'+impl.length+'</span></div>';
+  h+='<details class="adder"><summary>+ New implant</summary><div class="body">'+
+    '<label>Date placed</label><input id="impl_date" type="date" value="'+todayStr()+'">'+
+    '<label>Implant type *</label><select id="impl_implant">'+
+      ['Endoprosthesis','Allograft','Allograft + implant','Arthrodesis','Amputation prosthetic','Reconstruction plate','Nail / rod','Custom / 3D printed','Other'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select>'+
+    '<label>Manufacturer</label><input id="impl_maker" placeholder="e.g. Stryker, Zimmer, local">'+
+    '<label>Model / serial number</label><input id="impl_serial">'+
+    '<label>Size / specifications</label><input id="impl_size" placeholder="e.g. 15 cm resection, custom">'+
+    '<label>Notes (complications, revisions)</label><textarea id="impl_inotes"></textarea>'+
+    '<button class="btn" style="margin-top:14px" onclick="addImplant(\''+pid+'\')">Save implant</button>'+
+    '</div></details>';
+  h+=recList(impl,function(i){
+    return '<div class="row"><div class="top"><span class="name">'+esc(i.implant)+'</span>'+
+      '<span class="when">'+fmtD(i.date)+'</span></div>'+
+      (i.maker?'<div class="small"><b>Mfg:</b> '+esc(i.maker)+'</div>':'')+
+      (i.serial?'<div class="small"><b>S/N:</b> '+esc(i.serial)+'</div>':'')+
+      (i.size?'<div class="small"><b>Size:</b> '+esc(i.size)+'</div>':'')+
+      (i.notes?'<div class="body-text">'+esc(i.notes)+'</div>':'')+
+      '<div class="foot"><button class="linkbtn" onclick="deleteRec(\'implants\',\''+i.id+'\')">Delete</button></div></div>';
+  },'No implants recorded.');
+
+  /* -------- appointments -------- */
+  h+='<div class="section-h">Appointments <span class="count">'+apt.length+'</span></div>';
+  h+='<details class="adder"><summary>+ New appointment</summary><div class="body">'+
+    apptFormFields(pid)+
+    '<button class="btn" style="margin-top:14px" onclick="addAppointment(\''+pid+'\')">Save appointment</button>'+
+    '</div></details>';
+  h+=recList(apt,function(a){return apptRow(a,false);},'No appointments yet.');
+
+  /* -------- follow-ups -------- */
+  h+='<div class="section-h">Follow-ups <span class="count">'+fu.length+'</span></div>';
+  h+='<details class="adder"><summary>+ New follow-up</summary><div class="body">'+
+    '<div class="grid2"><div><label>Visit date</label><input id="fu_date" type="date" value="'+todayStr()+'"></div>'+
+    '<div><label>Type</label><select id="fu_type">'+
+      ['Post-op visit','Suture removal','Clinical review','Surveillance imaging','Wound check','Chemo cycle review'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select></div></div>'+
+    '<label>Findings / notes</label><textarea id="fu_find"></textarea>'+
+    '<label>Next follow-up due</label><input id="fu_next" type="date">'+
+    '<div class="chip-row">'+
+      '<button class="chip" onclick="fuQuick(\'2w\')">+2 wk</button>'+
+      '<button class="chip" onclick="fuQuick(\'1m\')">+1 mo</button>'+
+      '<button class="chip" onclick="fuQuick(\'3m\')">+3 mo</button>'+
+      '<button class="chip" onclick="fuQuick(\'6m\')">+6 mo</button>'+
+      '<button class="chip" onclick="fuQuick(\'1y\')">+1 yr</button></div>'+
+    '<button class="btn" style="margin-top:14px" onclick="addFollowup(\''+pid+'\')">Save follow-up</button>'+
+    '</div></details>';
+  h+=recList(fu,function(f){
+    return '<div class="row"><div class="top"><span class="name">'+esc(f.type)+'</span>'+
+      '<span class="when">'+fmtD(f.date)+'</span></div>'+
+      (f.find?'<div class="body-text">'+esc(f.find)+'</div>':'')+
+      (f.next_date?'<div class="body-text"><b>Next due:</b> '+fmtD(f.next_date)+'</div>':'')+
+      '<div class="foot"><button class="linkbtn" onclick="deleteRec(\'followups\',\''+f.id+'\')">Delete</button></div></div>';
+  },'No follow-ups recorded.');
+
+  /* -------- photos & documents -------- */
+  h+='<div class="section-h">Photos &amp; documents <span class="count">'+att.length+'</span></div>';
+  h+='<details class="adder"><summary>+ Add photo / report (X-ray, MRI, histopath, clinical, intra-op)</summary><div class="body">'+
+    '<div class="grid2"><div><label>Category</label><select id="at_cat">'+
+      ['X-ray','MRI','CT / PET','Histopathology report','Clinical picture','Intra-operative picture','Other document'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>Date</label><input id="at_date" type="date" value="'+todayStr()+'"></div></div>'+
+    '<label>Remarks</label><textarea id="at_note" placeholder="e.g. pre-op AP view, post 3rd cycle"></textarea>'+
+    '<label>Photo(s) or PDF</label><input type="file" id="at_files" accept="image/*,application/pdf" multiple>'+
+    '<div class="muted small" style="margin-top:8px">Photos are compressed and saved on this phone only — they are never uploaded. Use camera or gallery.</div>'+
+    '<button class="btn" style="margin-top:14px" onclick="addAttachments(\''+pid+'\')">Save files</button>'+
+    '</div></details>';
+  if(att.length===0){ h+='<div class="empty">No photos or documents yet.</div>'; }
+  else{
+    h+='<div class="thumbs">'+att.map(function(a){
+      var isPdf=(a.mime||'').indexOf('pdf')>=0;
+      return '<div class="thumb-w" onclick="openAttachment(\''+a.id+'\')">'+
+        (isPdf?'<div class="thumb-doc"><i>📄</i><span>'+esc(a.name||'PDF')+'</span></div>'
+              :'<img data-att="'+a.id+'" alt="'+esc(a.category)+'">')+
+        '<span class="ttag">'+esc(catShort(a.category))+'</span></div>';
+    }).join('')+'</div>';
+    h+='<div class="muted small" style="margin-bottom:6px">Tap any file to view it full screen with its remarks, or to delete it.</div>';
+  }
+
+  h+='<hr class="sep"><button class="btn danger" onclick="deletePatient(\''+pid+'\')">Delete this patient and all their records</button>'+
+     '<div style="height:16px"></div>';
+  return h;
+}
+
+/* ---- record add functions ---- */
+function addEncounter(pid){
+  db.encounters.push({id:uid(),patient_id:pid,date:val('en_date')||todayStr(),
+    type:val('en_type'),cc:val('en_cc'),exam:val('en_exam'),ax:val('en_ax'),plan:val('en_plan')});
+  save(); toast('Encounter saved'); render();
+}
+function addImaging(pid){
+  db.imaging.push({id:uid(),patient_id:pid,date:val('im_date')||todayStr(),
+    mod:val('im_mod'),site:val('im_site'),find:val('im_find'),
+    stage:val('im_stage'),status:val('im_status')||'Pending'});
+  save(); toast('Record saved'); render();
+}
+function toggleImg(id){
+  var i=db.imaging.find(function(x){return x.id===id;}); if(!i) return;
+  i.status = i.status==='Complete' ? 'Pending' : 'Complete';
+  save(); render();
+}
+function addBiopsy(pid){
+  db.biopsies.push({id:uid(),patient_id:pid,date:val('bx_date')||todayStr(),
+    rtype:val('bx_type'),site:val('bx_site'),dx:val('bx_dx'),
+    grade:val('bx_grade'),margins:val('bx_margins'),det:val('bx_det')});
+  save(); toast('Report saved'); render();
+}
+function addTreatment(pid){
+  db.treatments.push({id:uid(),patient_id:pid,date:val('tr_date')||todayStr(),
+    type:val('tr_type'),det:val('tr_det'),cycles:val('tr_cyc'),status:val('tr_status')||'Planned'});
+  save(); toast('Treatment saved'); render();
+}
+function cycleTreatment(id){
+  var t=db.treatments.find(function(x){return x.id===id;}); if(!t) return;
+  var order=['Planned','Active','Completed'];
+  t.status=order[(order.indexOf(t.status)+1)%order.length];
+  save(); render();
+}
+function addSurgery(pid){
+  db.surgeries.push({id:uid(),patient_id:pid,date:val('sg_date')||todayStr(),
+    type:val('sg_type'),site:val('sg_site'),approach:val('sg_approach'),
+    findings:val('sg_find'),bloodLoss:val('sg_bl'),time:val('sg_time'),
+    notes:val('sg_notes')});
+  save(); toast('Surgery recorded'); render();
+}
+function addImplant(pid){
+  db.implants.push({id:uid(),patient_id:pid,date:val('impl_date')||todayStr(),
+    implant:val('impl_implant'),maker:val('impl_maker'),serial:val('impl_serial'),
+    size:val('impl_size'),notes:val('impl_inotes')});
+  save(); toast('Implant recorded'); render();
+}
+function addFollowup(pid){
+  db.followups.push({id:uid(),patient_id:pid,date:val('fu_date')||todayStr(),
+    type:val('fu_type'),find:val('fu_find'),next_date:val('fu_next')});
+  save(); toast('Follow-up saved'); render();
+}
+function fuQuick(code){
+  var d=new Date();
+  if(code==='2w') d.setDate(d.getDate()+14);
+  else if(code==='1m') d.setMonth(d.getMonth()+1);
+  else if(code==='3m') d.setMonth(d.getMonth()+3);
+  else if(code==='6m') d.setMonth(d.getMonth()+6);
+  else if(code==='1y') d.setFullYear(d.getFullYear()+1);
+  var el=document.getElementById('fu_next');
+  if(el) el.value=localYMD(d);
+}
+function deleteRec(coll,id){
+  if(!confirm('Delete this record?')) return;
+  if(coll==='attachments'){ imgDel(id); }
+  db[coll]=db[coll].filter(function(x){return x.id!==id;});
+  save(); toast('Deleted'); render();
+}
+
+/* ---- attachments ---- */
+function catShort(c){
+  var m={'X-ray':'XR','MRI':'MRI','CT / PET':'CT','Histopathology report':'HISTO',
+    'Clinical picture':'CLIN','Intra-operative picture':'OT','Other document':'DOC'};
+  return m[c]||'DOC';
+}
+function addAttachments(pid){
+  var inp=document.getElementById('at_files');
+  var files=(inp && inp.files) ? Array.prototype.slice.call(inp.files) : [];
+  if(!files.length){ toast('Choose a photo or PDF first'); return; }
+  var cat=val('at_cat')||'Other document', date=val('at_date')||todayStr(), note=val('at_note');
+  toast('Saving '+files.length+' file'+(files.length>1?'s':'')+'…');
+  var jobs=files.map(function(f){
+    return compressImage(f).then(function(blob){
+      var id=uid();
+      return imgPut(id,blob).then(function(){
+        db.attachments.push({id:id,patient_id:pid,date:date,category:cat,note:note,
+          mime:(blob.type||f.type||''),name:(f.name||'')});
+      });
+    });
+  });
+  Promise.all(jobs).then(function(){
+    save(); toast(files.length+' saved'); render();
+  }).catch(function(){
+    save(); toast('Some files could not be saved'); render();
+  });
+}
+var _viewerUrl=null, _viewerId=null;
+function openAttachment(id){
+  var a=db.attachments.find(function(x){return x.id===id;}); if(!a) return;
+  imgGet(id).then(function(blob){
+    if(!blob){ toast('File not found on this device'); return; }
+    if((a.mime||'').indexOf('pdf')>=0){
+      var u=URL.createObjectURL(blob);
+      window.open(u,'_blank');
+      setTimeout(function(){ try{URL.revokeObjectURL(u);}catch(e){} },30000);
+      return;
+    }
+    _viewerId=id;
+    if(_viewerUrl){ try{URL.revokeObjectURL(_viewerUrl);}catch(e){} }
+    _viewerUrl=URL.createObjectURL(blob);
+    document.getElementById('viewerImg').src=_viewerUrl;
+    document.getElementById('viewerMeta').textContent=
+      a.category+' · '+fmtD(a.date)+(a.note?'\n'+a.note:'');
+    document.getElementById('viewerDel').onclick=function(){ delFromViewer(); };
+    document.getElementById('viewer').classList.add('show');
+  });
+}
+function closeViewer(){
+  document.getElementById('viewer').classList.remove('show');
+  if(_viewerUrl){ try{URL.revokeObjectURL(_viewerUrl);}catch(e){} _viewerUrl=null; }
+  _viewerId=null;
+}
+function delFromViewer(){
+  if(!_viewerId) return;
+  if(!confirm('Delete this file?')) return;
+  var id=_viewerId;
+  imgDel(id);
+  db.attachments=db.attachments.filter(function(x){return x.id!==id;});
+  save(); closeViewer(); toast('Deleted'); render();
+}
+
+/* ================= APPOINTMENTS / SCHEDULE ================= */
+function apptFormFields(fixedPid){
+  var h='';
+  if(!fixedPid){
+    if(db.patients.length===0)
+      return '<div class="empty">Add a patient first, then schedule them here.</div>';
+    h+='<label>Patient</label><select id="ap_pid">'+
+      db.patients.slice().sort(function(a,b){return a.name.localeCompare(b.name);})
+        .map(function(p){return '<option value="'+p.id+'">'+esc(p.name)+'</option>';}).join('')+
+      '</select>';
+  }
+  h+='<div class="grid2"><div><label>Date &amp; time</label><input id="ap_dt" type="datetime-local"></div>'+
+    '<div><label>Type</label><select id="ap_type">'+
+      ['First consultation','OPD consult','Biopsy','Pre-op assessment','Surgery','Post-op visit','Suture removal','Chemo review','Follow-up','MDT'].map(function(t){return '<option>'+t+'</option>';}).join('')+
+    '</select></div></div>'+
+    '<label>Notes</label><textarea id="ap_notes"></textarea>'+
+    '<div class="muted small" style="margin-top:10px">Readiness is tracked on the card after saving — tap the IMG / PATH / SURG dots as imaging, pathology and surgical clearance come in.</div>';
+  return h;
+}
+function apptRow(a, showName){
+  var ready = a.img_ok && a.path_ok && a.surg_ok;
+  var statusTone = a.status==='Done' ? 'green' : (a.status==='Cancelled' ? 'gray' : 'blue');
+  var overdue = a.status==='Scheduled' && a.dt && new Date(a.dt) < new Date() &&
+                a.dt.slice(0,10)!==todayStr();
+  var h='<div class="row'+(ready&&a.status==='Scheduled'?' all-ready':'')+'">'+
+    '<div class="top"><span class="name">'+esc(showName?pName(a.patient_id):a.type)+'</span>'+
+    '<span class="when">'+fmtDT(a.dt)+'</span></div>'+
+    (showName?'<div class="muted small">'+esc(a.type)+'</div>':'')+
+    (a.notes?'<div class="body-text">'+esc(a.notes)+'</div>':'');
+  if(a.status==='Scheduled'){
+    h+='<div class="ready-strip">'+
+      readyDot(a,'img_ok','IMG')+readyDot(a,'path_ok','PATH')+readyDot(a,'surg_ok','SURG')+
+      '</div>';
+  }
+  h+='<div class="foot"><span class="tag '+statusTone+'">'+esc(a.status)+'</span>'+
+    (overdue?'<span class="tag red">Overdue</span>':'')+
+    (ready&&a.status==='Scheduled'?'<span class="tag green">Ready</span>':'');
+  if(a.status==='Scheduled'){
+    h+='<button class="btn subtle mini" onclick="setAppt(\''+a.id+'\',\'Done\')">Done</button>'+
+       '<button class="btn subtle mini" onclick="setAppt(\''+a.id+'\',\'Cancelled\')">Cancel</button>';
+  }
+  h+='<button class="linkbtn" onclick="deleteRec(\'appointments\',\''+a.id+'\')">Delete</button>'+
+     '</div></div>';
+  return h;
+}
+function readyDot(a,key,label){
+  return '<button class="rdot'+(a[key]?' on':'')+'" onclick="toggleReady(\''+a.id+'\',\''+key+'\')">'+
+    '<span class="c"></span><span>'+label+'</span></button>';
+}
+function toggleReady(id,key){
+  var a=db.appointments.find(function(x){return x.id===id;}); if(!a) return;
+  a[key]=!a[key]; save(); render();
+}
+function setAppt(id,status){
+  var a=db.appointments.find(function(x){return x.id===id;}); if(!a) return;
+  a.status=status; save(); toast('Marked '+status.toLowerCase()); render();
+}
+function addAppointment(fixedPid){
+  var pid = fixedPid || val('ap_pid');
+  if(!pid){ toast('Pick a patient'); return; }
+  if(!val('ap_dt')){ toast('Set a date and time'); return; }
+  db.appointments.push({id:uid(),patient_id:pid,dt:val('ap_dt'),type:val('ap_type'),
+    notes:val('ap_notes'),status:'Scheduled',img_ok:false,path_ok:false,surg_ok:false});
+  save(); toast('Appointment saved'); render();
+}
+function viewSchedule(){
+  var sched=db.appointments.filter(function(a){return a.status==='Scheduled';})
+    .sort(function(a,b){return a.dt<b.dt?-1:1;});
+  var past=db.appointments.filter(function(a){return a.status!=='Scheduled';})
+    .sort(function(a,b){return a.dt<b.dt?1:-1;});
+  var h='<details class="adder"><summary>+ New appointment</summary><div class="body">'+
+    apptFormFields(null)+
+    (db.patients.length?'<button class="btn" style="margin-top:14px" onclick="addAppointment(null)">Save appointment</button>':'')+
+    '</div></details>';
+  h+='<div class="section-h">Scheduled <span class="count">'+sched.length+'</span></div>';
+  if(sched.length===0) h+='<div class="empty">Nothing scheduled.</div>';
+  sched.forEach(function(a){ h+=apptRow(a,true); });
+  if(past.length){
+    h+='<div class="section-h">Done / cancelled <span class="count">'+past.length+'</span></div>';
+    past.slice(0,15).forEach(function(a){ h+=apptRow(a,true); });
+  }
+  return h;
+}
+
+/* ================= BACKUP / DATA ================= */
+function viewData(){
+  var total=db.encounters.length+db.imaging.length+db.biopsies.length+db.treatments.length+
+            db.surgeries.length+db.implants.length+db.appointments.length+db.followups.length;
+  var h='';
+  if(MEMORY_ONLY){
+    h+='<div class="banner red"><div><b>Preview mode.</b> Storage is unavailable here, so nothing you enter will persist. Open your deployed link in Chrome or Safari on your phone.</div></div>';
+  }
+  h+='<div class="card"><div class="eyebrow">Where your data lives</div>'+
+    '<div class="small">All records and photos are stored inside this browser, on this phone only. Nothing is uploaded anywhere. If you clear this browser\u2019s data or lose the phone, everything is gone — so export a backup regularly.</div>'+
+    '<div class="small muted" id="storEst" style="margin-top:8px"></div></div>';
+
+  h+='<div class="card"><div class="eyebrow">Backup</div>'+
+    '<div class="small" style="margin-bottom:10px">'+db.patients.length+' patients · '+total+' records · '+
+    db.attachments.length+' files · Last backup: <b>'+
+    (db.lastBackup?fmtD(localYMD(new Date(db.lastBackup)))+' ('+daysAgo(db.lastBackup)+' days ago)':'never')+'</b></div>'+
+    '<button class="btn" onclick="exportFull()">Export full backup — records + photos</button>'+
+    '<div class="btn-row">'+
+    '<button class="btn ghost" onclick="exportRecords()">Records only (small)</button>'+
+    '<button class="btn ghost" onclick="exportCSV()">Patient list (.csv)</button></div>'+
+    '<button class="btn subtle" style="margin-top:8px" onclick="document.getElementById(\'importFile\').click()">Restore from backup file</button>'+
+    '<div class="muted small" style="margin-top:10px">Export weekly and save the file to Google Drive or email it to yourself. The full backup grows with your photo count.</div></div>';
+
+  h+='<div class="card"><div class="eyebrow">PIN lock</div>';
+  if(db.pin){
+    h+='<div class="small" style="margin-bottom:10px">A PIN is set. It is a basic screen lock for casual privacy — not encryption.</div>'+
+       '<button class="btn subtle" onclick="removePin()">Remove PIN</button>';
+  }else{
+    h+='<div class="small" style="margin-bottom:10px">Add a PIN so the app asks for it on open. Basic deterrent only — keep your phone itself locked too.</div>'+
+       '<label>New PIN (4–8 digits)</label><input id="newPin" type="password" inputmode="numeric" maxlength="8">'+
+       '<button class="btn" style="margin-top:12px" onclick="setPin()">Set PIN</button>';
+  }
+  h+='</div>';
+
+  h+='<div class="card"><div class="eyebrow" style="color:var(--red)">Danger zone</div>'+
+    '<button class="btn danger" onclick="eraseAll()">Erase all data on this device</button></div>';
+  return h;
+}
+function fillStorageEstimate(){
+  var el=document.getElementById('storEst');
+  if(!el) return;
+  if(typeof navigator!=='undefined' && navigator.storage && navigator.storage.estimate){
+    navigator.storage.estimate().then(function(e){
+      if(e && e.usage!=null){
+        el.textContent='Storage used: '+(e.usage/1048576).toFixed(1)+' MB'+
+          (e.quota?' of ~'+Math.round(e.quota/1048576)+' MB available':'');
+      }
+    }).catch(function(){});
+  }
+}
+function blobToDataURL(b){
+  return new Promise(function(res){
+    try{
+      var r=new FileReader();
+      r.onload=function(){res(r.result);};
+      r.onerror=function(){res(null);};
+      r.readAsDataURL(b);
+    }catch(e){ res(null); }
+  });
+}
+function dataURLtoBlob(du){
+  var p=du.split(',');
+  var mime=(p[0].match(/data:(.*?)[;,]/)||[])[1]||'application/octet-stream';
+  var bin=atob(p[1]);
+  var arr=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:mime});
+}
+function downloadJSON(obj,name){
+  var blob=new Blob([JSON.stringify(obj)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ try{URL.revokeObjectURL(a.href);}catch(e){} a.remove(); },1500);
+}
+function exportRecords(){
+  db.lastBackup=Date.now(); save();
+  downloadJSON(db,'ortholog-records-'+todayStr()+'.json');
+  toast('Records backup exported'); render();
+}
+function exportFull(){
+  toast('Preparing backup…');
+  var jobs=db.attachments.map(function(a){
+    return imgGet(a.id).then(function(blob){
+      if(!blob) return null;
+      return blobToDataURL(blob).then(function(du){
+        return du ? {id:a.id, du:du} : null;
+      });
+    });
+  });
+  Promise.all(jobs).then(function(list){
+    var imgs={};
+    list.forEach(function(x){ if(x) imgs[x.id]=x.du; });
+    db.lastBackup=Date.now(); save();
+    var data=JSON.parse(JSON.stringify(db));
+    data.__images=imgs;
+    downloadJSON(data,'ortholog-full-'+todayStr()+'.json');
+    toast('Full backup exported'); render();
+  }).catch(function(){ toast('Backup failed — try records-only'); });
+}
+function importJSON(ev){
+  var f=ev.target.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var d=JSON.parse(r.result);
+      if(!d || !Array.isArray(d.patients)) throw new Error('bad');
+      if(!confirm('Replace ALL current data with this backup ('+d.patients.length+' patients'+
+        (d.__images?', includes photos':'')+')?')){ ev.target.value=''; return; }
+      var imgs=d.__images||null;
+      delete d.__images;
+      var s=seed();
+      for(var k in s){ if(d[k]===undefined) d[k]=s[k]; }
+      db=d; save();
+      if(imgs){
+        var ids=Object.keys(imgs);
+        var jobs=ids.map(function(id){
+          try{ return imgPut(id, dataURLtoBlob(imgs[id])); }
+          catch(e){ return Promise.resolve(); }
+        });
+        Promise.all(jobs).then(function(){ toast('Backup + photos restored'); nav('home'); });
+      }else{
+        toast('Backup restored'); nav('home');
+      }
+    }catch(e){ toast('That file is not a valid OrthoLog backup'); }
+    ev.target.value='';
+  };
+  r.readAsText(f);
+}
+function exportCSV(){
+  var head=['Name','Age','Sex','Phone','Referring doctor','Diagnosis','History','Allergies','Special remarks','Current stage','Added'];
+  var q=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
+  var rows=db.patients.map(function(p){
+    var cur=currentStage(p);
+    return [p.name,p.age,p.sex,p.phone,p.ref,p.dx,p.hx,p.all,p.remarks,
+      (cur?cur.n:'Pathway complete'),p.created].map(q).join(',');});
+  var blob=new Blob([head.map(q).join(',')+'\n'+rows.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ortholog-patients-'+todayStr()+'.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ try{URL.revokeObjectURL(a.href);}catch(e){} a.remove(); },1500);
+  toast('CSV exported');
+}
+function eraseAll(){
+  if(!confirm('Erase every patient, record and photo from this device?')) return;
+  if(!confirm('Really sure? There is no undo. Export a backup first if in doubt.')) return;
+  imgClearAll();
+  db=seed(); save(); toast('All data erased'); nav('home');
+}
+
+/* ================= PIN lock ================= */
+function setPin(){
+  var p=val('newPin');
+  if(!/^\d{4,8}$/.test(p)){ toast('PIN must be 4–8 digits'); return; }
+  db.pin=btoa(p); save(); toast('PIN set'); render();
+}
+function removePin(){
+  if(!confirm('Remove the PIN lock?')) return;
+  db.pin=null; save(); toast('PIN removed'); render();
+}
+function unlock(){
+  var v=document.getElementById('lockPin').value;
+  if(btoa(v)===db.pin){
+    document.getElementById('lock').classList.remove('show');
+    document.getElementById('lockPin').value='';
+  }else{ toast('Wrong PIN'); }
+}
+function forgotPin(){
+  if(confirm('Without the PIN the only option is to erase all data on this device. Erase everything?')){
+    imgClearAll();
+    db=seed(); save();
+    document.getElementById('lock').classList.remove('show');
+    nav('home'); toast('Data erased — starting fresh');
+  }
+}
+
+/* ================= init ================= */
+if(typeof navigator!=='undefined' && navigator.storage && navigator.storage.persist){
+  try{ navigator.storage.persist(); }catch(e){}
+}
+if(db.pin && !MEMORY_ONLY){ document.getElementById('lock').classList.add('show'); }
+render();
+</script>
+</body>
+</html>
